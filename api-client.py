@@ -1,32 +1,38 @@
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from requests.exceptions import HTTPError
-import sys
 
-url = "https://api.github.com/users/torvalds"
+url_get = "https://api.github.com/users/torvalds"
+url_post = "https://httpbin.org/post"
+payload = {"name": "Margeirr", "status": "learning"}
 
-def get_api_data(url, params=None):
+def make_request(url, method="GET", payload=None):
     try:
-        response_get = requests.get(url, params=params, timeout=5)
-        response_get.raise_for_status()
+        if method == "GET":
+            response = requests.get(url, timeout=5)
+        elif method == "POST":
+            response = requests.post(url, json=payload, timeout=5)
+        else:
+            return None, "Неизвестный метод"
+        response.raise_for_status()
     except Timeout:
         return None, "Таймаут"
     except ConnectionError:
         return None, "Нет связи"
     except HTTPError as e:
         return None, f"Ошибка HTTP: {e.response.status_code}"
-    return response_get.json(), None
+    return response.json(), None
 
-def main():
-    data, error = get_api_data(url)
+def main(url, method="GET", payload=None):
+    data, error = make_request(url, method=method, payload=payload)
     if error:
         print(error)
-        sys.exit()
-    name = data.get("name")
-    public_repos = data.get("public_repos")
-    followers = data.get("followers")
-    print(f"У {name} {public_repos} репозиториев и {followers} подписчиков")
-    
+        return
+    print(type(data))
+    print(data)
+
 if __name__ == "__main__":
-    main()
+    main(url_get)
+    main(url_post, method="POST", payload=payload)
+
 
